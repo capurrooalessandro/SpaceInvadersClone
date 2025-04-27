@@ -1,0 +1,164 @@
+<html>
+<head>
+	<title> Space Invaders </title>
+</head>
+<body>
+<p>SPACE INVADERS</p>
+<p>Debug:</p>
+<p id="keys">keys</p>
+<p id="x">x</p>
+<canvas id="GameWindow" height="700" width="700" style="border:10px solid #d3d3d3">	
+	<script>
+	/**Dichiarazione del canvas (il riquadro del gioco)**/
+		var canvas = document.getElementById("GameWindow");
+	/****************************************************/
+	
+	/**Variabili generali**/
+		var ctx = canvas.getContext("2d");
+		var giocatore;
+		var proiettili = [];
+		var shootingDelay = 15;
+		var lastTimeShot = 0;
+	/**********************/
+	
+	/**Variabili Movimento Giocatore**/
+		var state = true;
+		var counter = 0;
+		var pressed = [];
+		var cxc;
+	/********************************/
+	
+	/**Funzione start, richiamata per le operazioni iniziali**/
+	function Start(){
+		giocatore = new Giocatore(canvas.width/2, canvas.height-80, 50, 70, 10);
+	}
+	
+	Start();
+	/********************************************/
+	
+	/**Codice Giocatore(creazione dell'oggetto nel canvas)**/	
+		function Giocatore(x, y, width, height, speed){
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			this.speed = speed;
+	
+			this.update = function(){
+				ctx.fillStyle = "green";
+				ctx.fillRect(this.x, this.y, this.width , this.height);
+			}
+			this.moveDx = function(){
+				this.x += this.speed;
+			}
+			
+			this.moveSx = function(){
+				this.x -= this.speed;
+			}
+		}
+	/********************************************************/	
+	
+	/**Oggetto Proiettile e funzioni relative**/
+		function Proiettile(x, y, width, height, speed){
+			this.x = x;
+			this.y = y;
+			this.width = width;
+			this.height = height;
+			this.speed = speed;
+			this.tocca = false;
+			
+			this.update = function(){
+				ctx.fillStyle = "yellow";
+				ctx.fillRect(this.x, this.y, this.width, this.height);
+			}
+			
+			this.updatePosition = function(){
+				if(this.y > 0){
+					this.y += this.speed;
+				}else{
+					this.tocca = true;
+				}
+			}
+		}
+		
+		function updateArrayProiettili(){
+			if(proiettili.length > 0 && proiettili[0].tocca == true){
+				proiettili.shift();
+			}
+		}
+		
+		function updatePosizProiettili(){
+			for(var i = 0; i < proiettili.length; i++){
+				proiettili[i].updatePosition();
+			}
+		}
+	/******************************************/
+	
+	/**Aggiorna il canvas**/
+		function ScreenUpdate(){
+			ctx.clearRect(0, 0, canvas.width, canvas.height);
+			ctx.fillStyle = "#000";
+			ctx.fillRect(0, 0, canvas.width, canvas.height);
+			
+			giocatore.update();
+			for(var i = 0; i < proiettili.length; i++){
+					proiettili[i].update();
+			}
+		}
+	/***********************/
+	
+	/**Aggiorna variabili del gioco**/
+	function GameUpdate(){
+		updateArrayProiettili();
+		updatePosizProiettili();
+		ScreenUpdate();
+	}
+	/********************************/
+	
+	/**Codice Giocatore (azioni che può compiere, ovvero muoversi e sparare)**/
+		document.onkeydown = function(e) {
+			cxc = e.key;
+			pressed[cxc] = 1;
+		};
+		document.onkeyup = function(e) {	
+			cxc = 'hold';
+			pressed[cxc] = 0;
+		};
+		
+		function checkInput(){
+			switch(cxc){
+				case 'ArrowLeft':	//sinistra
+					if(giocatore.x - giocatore.speed > 0)
+						giocatore.moveSx();
+					break;
+				case 'ArrowRight':	//destra
+					if(giocatore.x + giocatore.width + giocatore.speed < canvas.width)
+						giocatore.moveDx();
+					break;
+				case 'ArrowUp': 
+					if(counter - lastTimeShot >= shootingDelay){
+						lastTimeShot = counter;
+						proiettili.push(new Proiettile(giocatore.x + giocatore.width/2, giocatore.y, 10, 20, -10));
+					}
+			}
+		}
+	/*****************************************************************************/
+	
+	/**Loop principale del gioco**/
+		var Loop = function(){
+			if (state) {
+				counter++;
+				gLoop = setTimeout(Loop, 1000 / 65); //comando che ripete il Loop
+				document.getElementById('keys').innerHTML = cxc;
+				if(proiettili.length > 0)
+					document.getElementById('x').innerHTML = proiettili.length;
+			}
+			checkInput();
+			GameUpdate();
+		};
+		
+		Loop();
+	/******************************/
+	</script>
+</body>
+</html>
